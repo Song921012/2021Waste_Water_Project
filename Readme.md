@@ -11,12 +11,13 @@ Folders:
 - Data: source data
 - Output_data: data for coding results
 - wbepi: classes and functions defined
-        model: api for definition and solution of SEIARV model
-        sensitivity: api for sensitivity analysis
-        parameter_estimation: api for parameter estimation
-        plot_data: api for data visulization
-        test: only for test
-        basic_models: api for some basic models, such as SIS, SIR
+  
+        - model: api for definition and solution of SEIARV model
+        - sensitivity: api for sensitivity analysis
+        - parameter_estimation: api for parameter estimation
+        - plot_data: api for data visulization
+        - test: only for test
+        - basic_models: api for some basic models, such as SIS, SIR
   
 Documents:
 wastewater_based_epidemiology: simulation, parameter estimation,
