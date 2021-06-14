@@ -8,12 +8,14 @@ import scipy as sp
 from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 
+
 class SEIARV():
     """
     Suspected-Exposed-Symptomatic Infected-Asymptomatic Infected
     -Recovered-Vaccinated Model
     """
-    def __init__(self,ctrl_C=None,ctrl_D=None, waning_rate=None, water_input_C=None, water_input_D=None,
+
+    def __init__(self, ctrl_C=None, ctrl_D=None, waning_rate=None, water_input_C=None, water_input_D=None,
                  travel=None, travel_V=None, vac_plan_C=None, vac_plan_D=None,
                  initS_C=100, initE_C=1, initA_C=1, initI_C=1, initR1_C=0, initR2_C=0,
                  initV_C=0, initE_C_V=0, initA_C_V=0, initI_C_V=0, initR1_C_V=0, initR2_C_V=0,
@@ -61,7 +63,6 @@ class SEIARV():
                      "nature_birth_C": nature_birth_C, "nature_birth_D": nature_birth_D, "nature_death": nature_death,
                      "vac_rate": vac_rate}
 
-
     # Compartment models
     @staticmethod
     def SEIARV_model(y, t, N_C=100, N_D=200,
@@ -76,7 +77,7 @@ class SEIARV():
         S_D, E_D, A_D, I_D, R1_D, R2_D, V_D, E_D_V, A_D_V, I_D_V, R1_D_V, R2_D_V, W_D, M_D = y
 
         # time-dependent function
-        SEIARV_1=SEIARV()
+        SEIARV_1 = SEIARV()
         ctrl_C = SEIARV_1.ctrl_C  # input control function
         ctrl_D = SEIARV_1.ctrl_D
         waning_rate = SEIARV_1.waning_rate
@@ -160,22 +161,147 @@ class SEIARV():
             [dS_C, dE_C, dA_C, dI_C, dR1_C, dR2_C, dV_C, dE_C_V, dA_C_V, dI_C_V, dR1_C_V, dR2_C_V, dW_C, dM_C,
              dS_D, dE_D, dA_D, dI_D, dR1_D, dR2_D, dV_D, dE_D_V, dA_D_V, dI_D_V, dR1_D_V, dR2_D_V, dW_D, dM_D])
 
-
-# Solving the model by odeint
+    # Solving the model by odeint
     def ode_sol(self):
         init_value = [self.initvalue[i] for i in self.initvalue.keys()]
-        #print("Initial Value:", init_value)
+        # print("Initial Value:", init_value)
         tspan = np.arange(self.timepara["t0"], self.timepara["tend"], self.timepara["dt"])  # time span
-        #print("Tspan:", tspan)
+        # print("Tspan:", tspan)
         para = tuple([self.para[i] for i in self.para.keys()])  # args
-        #print("Parameters:", para)
+        # print("Parameters:", para)
         sol = odeint(self.SEIARV_model, init_value, tspan, para, )
         return {"tspan": tspan, "solution": sol}
 
 
+class SEIARV_one():
+    """
+    One region Suspected-Exposed-Symptomatic Infected-Asymptomatic Infected
+    -Recovered-Vaccinated Model
+    """
+
+    def __init__(self, ctrl=None, waning_rate=None, water_input=None,
+                 vac_plan=None, diagnosed=None, diagnosed_V=None,
+                 initS=100, initE=1, initA=1, initI=1, initD=0, initR1=0, initR2=0,
+                 initV=0, initE_V=0, initA_V=0, initI_V=0, initD_V=0, initR1_V=0, initR2_V=0,
+                 initW=0, initM=100,
+                 t0=0, dt=0.1, tend=200,
+                 N=100,
+                 beta=0.2,
+                 k_E=1 / 3, k_A=1 / 3, sigma=1 / 5.2, rho=0.18,
+                 gamma_I=1 / 12, gamma_A=1 / 10, gamma_R=1 / 13, gamma_D=1 / 10,
+                 p_0=100, p_E=0.1, p_A=0.1, p_R=0.1,
+                 lambda_0=1,
+                 nu=0.2, epsilon=0.5, rho_V=0.8, sigma_V=1 / 5, gamma_I_V=1 / 10, gamma_A_V=1 / 8, gamma_R_V=1 / 10,
+                 gamma_D_V=1 / 10,
+                 p_1=50,
+                 nature_birth=0, nature_death=0, vac_rate=0, diag_rate=1):
+        self.ctrl = ctrl if ctrl is not None else lambda t: 1
+        self.waning_rate = waning_rate if waning_rate is not None else lambda t: 1
+        self.water_input = water_input if water_input is not None else lambda t: 100
+        self.vac_plan = vac_plan if vac_plan is not None else lambda t: 0
+        self.diagnosed = diagnosed if diagnosed is not None else lambda t: 0
+        self.diagnosed_V = diagnosed_V if diagnosed_V is not None else lambda t: 0
+        # time-dependent function; Initial value; time; parameters; others
+        self.initvalue = {"initS": initS, "initE": initE, "initA": initA, "initI": initI, "initD": initD,
+                          "initR1": initR1, "initR2": initR2,
+                          "initV": initV, "initE_V": initE_V, "initA_V": initA_V, "initI_V": initI_V,
+                          "initD_V": initD_V,
+                          "initR1_V": initR1_V, "initR2_V": initR2_V, "initW": initW, "initM": initM}
+        self.timepara = {"t0": t0, "dt": dt, "tend": tend}
+        self.para = {"N": N,
+                     "beta": beta,
+                     "k_E": k_E, "k_A": k_A, "sigma": sigma, "rho": rho,
+                     "gamma_I": gamma_I, "gamma_A": gamma_A, "gamma_R": gamma_R, "gamma_D": gamma_D,
+                     "p_0": p_0, "p_E": p_E, "p_A": p_A, "p_R": p_R,
+                     "lambda_0": lambda_0,
+                     "nu": nu, "epsilon": epsilon, "rho_V": rho_V, "sigma_V": sigma_V,
+                     "gamma_I_V": gamma_I_V, "gamma_A_V": gamma_A_V, "gamma_R_V": gamma_R_V, "gamma_D_V": gamma_D_V,
+                     "p_1": p_1,
+                     "nature_birth": nature_birth, "nature_death": nature_death,
+                     "vac_rate": vac_rate, "diag_rate": diag_rate}
+
+    # Compartment models
+    @staticmethod
+    def SEIARV_one_model(y, t, N=100,
+                         beta=0.2,
+                         k_E=1 / 3, k_A=1 / 3, sigma=1 / 5.2, rho=0.18,
+                         gamma_I=1 / 12, gamma_A=1 / 10, gamma_R=1 / 13, gamma_D=1 / 10,
+                         p_0=100, p_E=0.1, p_A=0.1, p_R=0.1,
+                         lambda_0=1,
+                         nu=0.2, epsilon=0.5, rho_V=0.8, sigma_V=1 / 5, gamma_I_V=1 / 10, gamma_A_V=1 / 8,
+                         gamma_D_V=1 / 10,
+                         gamma_R_V=1 / 10,
+                         p_1=50, nature_birth=0, nature_death=0, vac_rate=0, diag_rate=1):
+        S, E, A, I, D, R1, R2, V, E_V, A_V, I_V, D_V, R1_V, R2_V, W, M, = y
+
+        # time-dependent function
+        SEIARV_1 = SEIARV_one()
+        ctrl = SEIARV_1.ctrl  # input control function
+        waning_rate = SEIARV_1.waning_rate
+        water_input = SEIARV_1.water_input
+        diagnosed = SEIARV_1.diagnosed
+        diagnosed_V = SEIARV_1.diagnosed_V
+        vac_plan = SEIARV_1.vac_plan
+        # Calculation
+        N1 = S + E + A + I + D + R1 + R2
+        N2 = V + E_V + A_V + I_V + D_V + R1_V + R2_V
+        N_stay = N1 + N2
+
+        ## non-vac individuals with infectiveness in University
+        Infective = k_E * E + k_A * A + I
+        ## vac individuals with infectiveness in University
+        Infective_V = k_E * E_V + k_A * A_V + I_V
+        ## non-vac infection of students in university
+        Infec = beta * ctrl(t) * S * (Infective + nu * Infective_V) / N_stay
+        ## vac infection of students in university
+        Infec_V = epsilon * beta * ctrl(t) * V * (
+                Infective + nu * Infective_V) / N_stay
+        ## Viral shedding in University
+        shed = p_0 * (I + D + p_A * A + p_E * E + p_R * R1) + p_1 * (
+                I_V + D_V + p_A * A_V + p_E * E_V)
+
+        ## Choice of vaccination term phi(t)S or phi(t); vac_rate=0, phi(t); vac_rate=1, phi(t) S
+        vac = vac_plan(t) * (vac_rate * S + 1 - vac_rate)
+        diag_A = diagnosed(t) * (diag_rate * A + 1 - diag_rate)
+        diag_I = diagnosed(t) * (diag_rate * I + 1 - diag_rate)
+        diag_A_V = diagnosed_V(t) * (diag_rate * A_V + 1 - diag_rate)
+        diag_I_V = diagnosed_V(t) * (diag_rate * I_V + 1 - diag_rate)
+
+        # dydt
+        dS = nature_birth - Infec - vac - nature_death * S
+        dE = Infec - sigma * E - nature_death * E
+        dA = rho * sigma * E - gamma_A * A - nature_death * A - diag_A
+        dI = (1 - rho) * sigma * E - gamma_I * I - nature_death * I - diag_I
+        dD = diag_A + diag_I - gamma_D * D
+        dR1 = gamma_D * D + gamma_A * A + gamma_I * I - gamma_R * R1 - nature_death * R1
+        dR2 = gamma_R * R1 - nature_death * R2
+        dV = vac - Infec_V - nature_death * V
+        dE_V = Infec_V - sigma_V * E_V - nature_death * E_V
+        dA_V = rho_V * sigma_V * E_V - gamma_A_V * A_V - nature_death * A_V - diag_A_V
+        dI_V = (1 - rho_V) * sigma_V * E_V - gamma_I_V * I_V - nature_death * I_V - diag_I_V
+        dD_V = diag_A_V + diag_I_V - gamma_D_V * D_V
+        dR1_V = gamma_D_V * D_V + gamma_A_V * A_V + gamma_I_V * I_V - gamma_R_V * R1_V - nature_death * R1_V
+        dR2_V = gamma_R_V * R1_V - nature_death * R2_V
+        dW = shed / M - waning_rate(t) * W
+        dM = water_input(t) - lambda_0 * M
+        return np.array(
+            [dS, dE, dA, dI, dD, dR1, dR2, dV, dE_V, dA_V, dI_V, dD_V, dR1_V, dR2_V, dW, dM])
+
+    # Solving the model by odeint
+    def ode_sol(self):
+        init_value = [self.initvalue[i] for i in self.initvalue.keys()]
+        # print("Initial Value:", init_value)
+        tspan = np.arange(self.timepara["t0"], self.timepara["tend"], self.timepara["dt"])  # time span
+        # print("Tspan:", tspan)
+        para = tuple([self.para[i] for i in self.para.keys()])  # args
+        # print("Parameters:", para)
+        sol = odeint(self.SEIARV_one_model, init_value, tspan, para, )
+        return {"tspan": tspan, "solution": sol}
+
+
 if __name__ == '__main__':
-    #ctrl = lambda t: 0.1 + 0.1 * np.sin(2 * np.pi * t)
-    test_SEIARV=SEIARV()
+    # ctrl = lambda t: 0.1 + 0.1 * np.sin(2 * np.pi * t)
+    test_SEIARV = SEIARV_one()
     A = test_SEIARV.ode_sol()
-    plt.plot(A["tspan"], A["solution"][:, 2])
+    plt.plot(A["tspan"], A["solution"][:, 11])
     plt.show()
