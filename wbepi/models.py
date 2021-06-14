@@ -164,11 +164,11 @@ class SEIARV():
 # Solving the model by odeint
     def ode_sol(self):
         init_value = [self.initvalue[i] for i in self.initvalue.keys()]
-        print("Initial Value:", init_value)
+        #print("Initial Value:", init_value)
         tspan = np.arange(self.timepara["t0"], self.timepara["tend"], self.timepara["dt"])  # time span
-        print("Tspan:", tspan)
+        #print("Tspan:", tspan)
         para = tuple([self.para[i] for i in self.para.keys()])  # args
-        print("Parameters:", para)
+        #print("Parameters:", para)
         sol = odeint(self.SEIARV_model, init_value, tspan, para, )
         return {"tspan": tspan, "solution": sol}
 
