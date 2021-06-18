@@ -21,4 +21,5 @@ Folders:
   
 Documents:
 wastewater_based_epidemiology: simulation, parameter estimation,
-                              sensitive analysis, data visulization
+                              sensitive analysis
+Data_Visulization: source data visualization
