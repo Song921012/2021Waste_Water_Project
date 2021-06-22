@@ -299,9 +299,97 @@ class SEIARV_one():
         return {"tspan": tspan, "solution": sol}
 
 
+class SEIARW():
+    """
+     Suspected-Exposed-Symptomatic Infected-Asymptomatic Infected
+    -Recovered-Wastewater Model
+    """
+
+    def __init__(self, ctrl=None,
+                 initS=100, initE=1, initA=1, initI=1, initD=0, initR1=0, initR2=0, initW=0,
+                 t0=0, dt=0.1, tend=100,
+                 N=100,
+                 beta=0.2,
+                 k_E=1 / 3, k_A=1 / 3, sigma=1 / 5.2, rho=0.3,
+                 gamma_I=1 / 10, gamma_A=1 / 10, gamma_R=1 / 13,
+                 detecting_A=0.1, detacting_I=0.1,
+                 p_0=100, p_E=0.1, p_A=0.1, p_R=0.1,
+                 water_volume=3000, waning_rate=1,
+                 nature_birth=0, nature_death=0):
+        self.ctrl = ctrl if ctrl is not None else lambda t: 1
+        # time-dependent function; Initial value; time; parameters; others
+        self.initvalue = {"initS": initS, "initE": initE, "initA": initA, "initI": initI, "initD": initD,
+                          "initR1": initR1, "initR2": initR2,
+                          "initW": initW}
+        self.timepara = {"t0": t0, "dt": dt, "tend": tend}
+        self.para = {"ctrl": self.ctrl,
+                     "N": N,
+                     "beta": beta,
+                     "k_E": k_E, "k_A": k_A, "sigma": sigma, "rho": rho,
+                     "gamma_I": gamma_I, "gamma_A": gamma_A, "gamma_R": gamma_R,
+                     "detecting_A": detecting_A, "detecting_I": detacting_I,
+                     "p_0": p_0, "p_E": p_E, "p_A": p_A, "p_R": p_R,
+                     "nature_birth": nature_birth, "nature_death": nature_death,
+                     "water-volume": water_volume, "waning_rate": waning_rate
+                     }
+
+    def BRN(self):
+        R_0 = self.para["beta"] * ((1 - self.para["rho"]) / (self.para["gamma_I"] + self.para["detecting_I"])
+                                   + self.para["k_A"] * self.para["rho"] / (
+                                           self.para["gamma_A"] + self.para["detecting_A"])
+                                   + self.para["k_E"] / self.para["sigma"])
+        return R_0
+
+    # Compartment models
+    @staticmethod
+    def SEIARW_model(y, t, ctrl=None, N=100,
+                     beta=0.2,
+                     k_E=1 / 3, k_A=1 / 3, sigma=1 / 5.2, rho=0.18,
+                     gamma_I=1 / 12, gamma_A=1 / 10, gamma_R=1 / 13,
+                     d_A=0.1, d_I=0.1,
+                     p_0=100, p_E=0.1, p_A=0.1, p_R=0.1,
+                     nature_birth=0, nature_death=0, M=3000, delta=1):
+        S, E, A, I, D, R1, R2, W = y
+
+        # time-dependent function
+        # ctrl = SEIARW_1.ctrl  # input control function
+        # Calculation
+        ## non-vac individuals with infectiveness in University
+        ctrl1 = ctrl if ctrl is not None else lambda t: 1
+        Infec = beta * ctrl1(t) * S * (k_E * E + k_A * A + I) / N
+
+        # dydt
+        dS = nature_birth - Infec - nature_death * S
+        dE = Infec - sigma * E - nature_death * E
+        dA = rho * sigma * E - gamma_A * A - nature_death * A - d_A * A
+        dI = (1 - rho) * sigma * E - gamma_I * I - nature_death * I - d_I * I
+        dD = d_A * A + d_I * I
+        dR1 = gamma_A * A + gamma_I * I - gamma_R * R1 - nature_death * R1
+        dR2 = gamma_R * R1 - nature_death * R2
+        dW = p_0 * (I + p_A * A + p_E * E + p_R * R1) / M - delta * W
+        return np.array(
+            [dS, dE, dA, dI, dD, dR1, dR2, dW])
+
+    # Solving the model by odeint
+    def ode_sol(self):
+        init_value = [self.initvalue[i] for i in self.initvalue.keys()]
+        # print("Initial Value:", init_value)
+        tspan = np.arange(self.timepara["t0"], self.timepara["tend"], self.timepara["dt"])  # time span
+        # print("Tspan:", tspan)
+        para = tuple([self.para[i] for i in self.para.keys()])  # args
+        # print("Parameters:", para)
+        sol = odeint(self.SEIARW_model, init_value, tspan, para, )
+        Midvalue = np.zeros(len(sol[:, 4]))
+        Midvalue[1:] = sol[:, 4][:-1]
+        daily_confirmed = sol[:, 4] - Midvalue
+        return {"tspan": tspan, "solution": sol, "newlyconfirmed": daily_confirmed}
+
+
 if __name__ == '__main__':
     # ctrl = lambda t: 0.1 + 0.1 * np.sin(2 * np.pi * t)
-    test_SEIARV = SEIARV_one()
-    A = test_SEIARV.ode_sol()
-    plt.plot(A["tspan"], A["solution"][:, 11])
+    test_SEIARW = SEIARW(k_E=0.3, k_A=0.3)
+    A = test_SEIARW.ode_sol()
+    R_0 = test_SEIARW.BRN()
+    print(R_0)
+    plt.plot(A["tspan"], A["solution"][:, 1])
     plt.show()
