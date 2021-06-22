@@ -380,6 +380,7 @@ class SEIARW():
         # print("Parameters:", para)
         sol = odeint(self.SEIARW_model, init_value, tspan, para, )
         Midvalue = np.zeros(len(sol[:, 4]))
+        Midvalue[0]=self.initvalue["initD"]
         Midvalue[1:] = sol[:, 4][:-1]
         daily_confirmed = sol[:, 4] - Midvalue
         return {"tspan": tspan, "solution": sol, "newlyconfirmed": daily_confirmed}
