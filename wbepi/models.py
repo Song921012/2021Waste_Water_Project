@@ -374,7 +374,11 @@ class SEIARW():
     def ode_sol(self):
         init_value = [self.initvalue[i] for i in self.initvalue.keys()]
         # print("Initial Value:", init_value)
-        tspan = np.arange(self.timepara["t0"], self.timepara["tend"], self.timepara["dt"])  # time span
+        tspan = np.arange(self.timepara["t0"], self.timepara["tend"], self.timepara["dt"])
+        CRN = (self.para["beta"] * ((1 - self.para["rho"]) / (self.para["gamma_I"] + self.para["detecting_I"])
+                                   + self.para["k_A"] * self.para["rho"] / (
+                                           self.para["gamma_A"] + self.para["detecting_A"])
+                                   + self.para["k_E"] / self.para["sigma"]))*self.ctrl(tspan)# time span
         # print("Tspan:", tspan)
         para = tuple([self.para[i] for i in self.para.keys()])  # args
         # print("Parameters:", para)
@@ -383,7 +387,7 @@ class SEIARW():
         Midvalue[0]=self.initvalue["initD"]
         Midvalue[1:] = sol[:, 4][:-1]
         daily_confirmed = sol[:, 4] - Midvalue
-        return {"tspan": tspan, "solution": sol, "newlyconfirmed": daily_confirmed}
+        return {"tspan": tspan, "solution": sol, "newlyconfirmed": daily_confirmed,"crn":CRN}
 
 
 if __name__ == '__main__':
