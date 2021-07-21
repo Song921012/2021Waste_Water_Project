@@ -389,6 +389,7 @@ class SEIARW():
         daily_confirmed = sol[:, 4] - Midvalue
         return {"tspan": tspan, "solution": sol, "newlyconfirmed": daily_confirmed,"crn":CRN}
 
+
 if __name__ == '__main__':
     # ctrl = lambda t: 0.1 + 0.1 * np.sin(2 * np.pi * t)
     test_SEIARW = SEIARW(k_E=0.3, k_A=0.3)
