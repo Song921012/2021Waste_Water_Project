@@ -22,10 +22,10 @@ Folders:
         - basic_models: api for some basic models, such as SIS, SIR
   
 Documents:
-wastewater_based_epidemiology: simulation, parameter estimation,
-                              sensitive analysis
-Data_Visulization: source data visualization
+- wastewater_based_epidemiology: simulation, parameter estimation,
+                              sensitive analysis for laramie
+- Data_Visulization: source data visualization
 
-Many_citys: parameter estimation for many cities
+- Many_citys: parameter estimation for many cities
 
-Prediction: prediction for many cities
+- Prediction: prediction for many cities
